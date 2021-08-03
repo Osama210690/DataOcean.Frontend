@@ -19,6 +19,7 @@ import Logout from './components/logout'
 import Home from './components/home'
 import Country from './components/country'
 import Cities from './components/cities'
+import Customer from './components/customer'
 import ItemMaster from './components/itemMaster'
 import Invoice from './components/invoice'
 
@@ -60,6 +61,11 @@ function App(props) {
               </NavLink>
             </li>
             <li className="nav-item active">
+              <NavLink className="nav-link" to="/customer">
+                Customer
+              </NavLink>
+            </li>
+            <li className="nav-item active">
               <NavLink className="nav-link" to="/items">
                 Item
               </NavLink>
@@ -78,6 +84,7 @@ function App(props) {
         </Route>
         <Route path="/country" component={Country}></Route>
         <Route path="/city" component={Cities}></Route>
+        <Route path="/customer" component={Customer}></Route>
         <Route path="/items" component={ItemMaster}></Route>
         <Route path="/invoice" component={Invoice}></Route>
       </Switch>
