@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from 'react'
 import {
   Table,
   Container,
@@ -8,69 +8,73 @@ import {
   Button,
   Form,
   InputGroup,
-} from "react-bootstrap";
-import localData from "../localData";
-import * as yup from "yup";
-import { Formik } from "formik";
-import ConfirmModal from "./common/confirmModal";
+} from 'react-bootstrap'
+import localData from '../localData'
+import * as yup from 'yup'
+import { Formik } from 'formik'
+import ConfirmModal from './common/confirmModal'
 
 const Country = (props) => {
-
   //#region Form States
 
-  const [formTitle, setFormTitle] = useState("");
+  const [formTitle, setFormTitle] = useState('')
 
-  const [countryData, setCountryData] = useState([]);
+  const [countryData, setCountryData] = useState([])
 
   const [countryFormData, setCountryFormData] = useState({
-    CountryCode: "",
-    CountryNameEng: "",
-    CountryNameAr: "",
-  });
+    CountryCode: '',
+    CountryNameEng: '',
+    CountryNameAr: '',
+  })
+
+  const [formAction, setFormAction] = useState('')
+
+  //#endregion
 
   // Modal Visibility State
-  const [show, setShow] = useState(false);
+  const [show, setShow] = useState(false)
 
-  const handleClose = () => setShow(false);
-  const handleShow = () => setShow(true);
+  const handleClose = () => setShow(false)
+  const handleShow = () => setShow(true)
 
   //#endregion
 
   //#region Form Actions
   const resetForm = () => {
+    let countryFormDataCopy = { ...countryFormData }
+    countryFormDataCopy.CountryCode = ''
+    countryFormDataCopy.CountryNameEng = ''
+    countryFormDataCopy.CountryNameAr = ''
 
-    let countryFormDataCopy = { ...countryFormData };
-    countryFormDataCopy.CountryCode = "";
-    countryFormDataCopy.CountryNameEng = "";
-    countryFormDataCopy.CountryNameAr = "";
+    setCountryFormData(countryFormDataCopy)
 
-    setCountryFormData(countryFormDataCopy);
-
-    handleShow();
+    handleShow()
   }
 
   const onEditCountry = (countryCode) => {
+    setFormTitle('Edit Country')
+    setFormAction('Update')
 
-    setFormTitle("Edit Country");
+    let selectedCountry = countryData.find((x) => x.CountryCode == countryCode)
 
-    let selectedCountry = countryData.find(x => x.CountryCode == countryCode);
+    let countryFormDataCopy = { ...countryFormData }
+    countryFormDataCopy.CountryCode = selectedCountry.CountryCode
+    countryFormDataCopy.CountryNameEng = selectedCountry.CountryName
+    countryFormDataCopy.CountryNameAr = selectedCountry.CountryNameArabic
 
-    let countryFormDataCopy = { ...countryFormData };
-    countryFormDataCopy.CountryCode = selectedCountry.CountryCode;
-    countryFormDataCopy.CountryNameEng = selectedCountry.CountryName;
-    countryFormDataCopy.CountryNameAr = selectedCountry.CountryNameArabic;
+    setCountryFormData(countryFormDataCopy)
 
-    setCountryFormData(countryFormDataCopy);
-
-    handleShow();
+    handleShow()
   }
 
   const onDeleteCountry = (countryCode) => {
-    handleConfirmationClose();
+    handleConfirmationClose()
 
-    let countryDataCopy = countryData.filter(x => x.CountryCode !== countryCode);
+    let countryDataCopy = countryData.filter(
+      (x) => x.CountryCode !== countryCode,
+    )
 
-    setCountryData(countryDataCopy);
+    setCountryData(countryDataCopy)
   }
 
   //#endregion
@@ -80,35 +84,37 @@ const Country = (props) => {
   const schema = yup.object().shape({
     CountryNameEng: yup.string().max(50).required(),
     CountryNameAr: yup.string().max(50).required(),
-  });
+  })
 
   //#endregion
 
+  //#region Confirmation Modal Visibility State
+  const [showConfirmation, setShowConfirmation] = useState(false)
 
-  //#region Confirmation Props
+  const handleConfirmationClose = () => setShowConfirmation(false)
+  const handleConfirmationShow = () => setShowConfirmation(true)
 
-  // Modal Visibility State
-  const [showConfirmation, setShowConfirmation] = useState(false);
-
-  const handleConfirmationClose = () => setShowConfirmation(false);
-  const handleConfirmationShow = () => setShowConfirmation(true);
-
-  const [confirmationKeyValue, setConfirmationKeyValue] = useState("");
+  const [confirmationKeyValue, setConfirmationKeyValue] = useState('')
 
   //#endregion
 
   useEffect(() => {
-    setCountryData(localData.countries());
-  }, []);
+    setCountryData(localData.countries())
+  }, [])
 
   return (
     <div className="col-lg-8 mt-2">
       <h3>Country</h3>
       <div className="float-end mb-2">
-        <button type="button" onClick={() => {
-          setFormTitle("Create Country");
-          resetForm();
-        }} className="btn btn-primary">
+        <button
+          type="button"
+          onClick={() => {
+            setFormTitle('Create Country')
+            setFormAction('Create')
+            resetForm()
+          }}
+          className="btn btn-primary"
+        >
           Create
         </button>
       </div>
@@ -140,11 +146,14 @@ const Country = (props) => {
                     Edit
                   </button>
 
-                  <button type="button" onClick={() => {
-                    setConfirmationKeyValue(country.CountryCode);
-                    handleConfirmationShow()
-
-                  }} className="btn btn-danger">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setConfirmationKeyValue(country.CountryCode)
+                      handleConfirmationShow()
+                    }}
+                    className="btn btn-danger"
+                  >
                     Delete
                   </button>
                 </td>
@@ -162,22 +171,29 @@ const Country = (props) => {
           </Modal.Header>
           <Modal.Body>
             <Formik
-
               validationSchema={schema}
               onSubmit={(values, actions) => {
-                let countryDataCopy = [...countryData];
+                let countryDataCopy = [...countryData]
+                if (formAction === 'Create') {
+                  countryDataCopy.push({
+                    CountryCode: 103,
+                    CountryName: values.CountryNameEng,
+                    CountryNameArabic: values.CountryNameAr,
+                  })
+                } else if (formAction === 'Update') {
+                  let countryIndex = countryData.findIndex(
+                    (x) => x.CountryCode === values.CountryCode,
+                  )
+                  countryDataCopy[countryIndex].CountryName =
+                    values.CountryNameEng
+                  countryDataCopy[countryIndex].CountryNameArabic =
+                    values.CountryNameAr
+                }
 
-                countryDataCopy.push({
-                  CountryCode: 103,
-                  CountryName: values.CountryNameEng,
-                  CountryNameArabic: values.CountryNameAr,
-                });
+                setCountryData(countryDataCopy)
 
-                setCountryData(countryDataCopy);
-
-                handleClose();
+                handleClose()
               }}
-
               initialValues={countryFormData}
             >
               {({
@@ -236,8 +252,9 @@ const Country = (props) => {
                   <Form.Group as={Row} className="mb-3">
                     <Col sm={{ span: 10, offset: 2 }}>
                       <Button className="btn btn-primary" type="submit">
-                        Submit
+                        {formAction === 'Create' ? 'Submit' : 'Update'}
                       </Button>
+
                       <Button className="btn btn-secondary m-2" type="reset">
                         Reset
                       </Button>
@@ -247,7 +264,6 @@ const Country = (props) => {
               )}
             </Formik>
           </Modal.Body>
-
         </Modal>
 
         {/* Confirmation Modal */}
@@ -259,10 +275,11 @@ const Country = (props) => {
           buttonText="Yes"
           modalTitle="Confirmation"
           modalMessage="Are you sure you want to delete this country?"
-          modalKeyValue={confirmationKeyValue} />
+          modalKeyValue={confirmationKeyValue}
+        />
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default Country;
+export default Country
