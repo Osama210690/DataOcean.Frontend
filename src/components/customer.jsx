@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState } from "react";
 import {
   Table,
   Container,
@@ -8,46 +8,46 @@ import {
   Button,
   Form,
   InputGroup,
-  FloatingLabel
-} from 'react-bootstrap'
-import localData from '../localData'
-import * as yup from 'yup'
-import { Formik } from 'formik'
-import ConfirmModal from './common/confirmModal'
+  FloatingLabel,
+} from "react-bootstrap";
+import localData from "../localData";
+import * as yup from "yup";
+import { Formik } from "formik";
+import ConfirmModal from "./common/confirmModal";
 
 const Customer = (props) => {
   //#region Form States
 
-  const [formTitle, setFormTitle] = useState('')
+  const [formTitle, setFormTitle] = useState("");
 
-  const [countryData, setCountryData] = useState([])
-  const [cityData, setCityData] = useState([])
-  const [citySelectData, setCitySelectData] = useState([])
+  const [countryData, setCountryData] = useState([]);
+  const [cityData, setCityData] = useState([]);
+  const [citySelectData, setCitySelectData] = useState([]);
 
-  const [customerData, setCustomerData] = useState([])
+  const [customerData, setCustomerData] = useState([]);
 
   const [customerFormData, setCustomerFormData] = useState({
-    CustomerCode: '',
-    EnglishName: '',
-    ArabicName: '',
-    MobileNo: '',
-    Email: '',
-    CountryCode: '',
-    City_Code: '',
-    AddressLine1: '',
-    AddressLine2: '',
-    AddressLine3: '',
-  })
+    CustomerCode: "",
+    EnglishName: "",
+    ArabicName: "",
+    MobileNo: "",
+    Email: "",
+    CountryCode: "",
+    City_Code: "",
+    AddressLine1: "",
+    AddressLine2: "",
+    AddressLine3: "",
+  });
 
-  const [formAction, setFormAction] = useState('')
+  const [formAction, setFormAction] = useState("");
 
   //#endregion
 
   //#region Modal Visibility State
-  const [formShow, setFormShow] = useState(false)
+  const [formShow, setFormShow] = useState(false);
 
-  const handleFormClose = () => setFormShow(false)
-  const handleFormShow = () => setFormShow(true)
+  const handleFormClose = () => setFormShow(false);
+  const handleFormShow = () => setFormShow(true);
 
   //#endregion
 
@@ -56,88 +56,109 @@ const Customer = (props) => {
   const schema = yup.object().shape({
     EnglishName: yup.string().max(50).required(),
     ArabicName: yup.string().max(50).required(),
-    MobileNo: yup.number().required() ,
+    MobileNo: yup.number().required(),
     Email: yup.string().email().max(50).required(),
     CountryCode: yup.string().max(4).required(),
     City_Code: yup.string().max(4).required(),
     AddressLine1: yup.string().max(250).required(),
     AddressLine2: yup.string().max(250).required(),
     AddressLine3: yup.string().max(250).required(),
-  })
+  });
 
   //#endregion
 
   //#region Confirmation Modal Visibility State
-  const [showConfirmation, setShowConfirmation] = useState(false)
+  const [showConfirmation, setShowConfirmation] = useState(false);
 
-  const handleConfirmationClose = () => setShowConfirmation(false)
-  const handleConfirmationShow = () => setShowConfirmation(true)
+  const handleConfirmationClose = () => setShowConfirmation(false);
+  const handleConfirmationShow = () => setShowConfirmation(true);
 
-  const [confirmationKeyValue, setConfirmationKeyValue] = useState('')
+  const [confirmationKeyValue, setConfirmationKeyValue] = useState("");
 
   //#endregion
 
   //#region Form Actions
+
   const resetForm = () => {
+    let customerFormDataCopy = { ...customerFormData };
+    customerFormDataCopy.CountryCode = "";
+    customerFormDataCopy.City_Code = "";
+    customerFormDataCopy.EnglishName = "";
+    customerFormDataCopy.ArabicName = "";
+    customerFormDataCopy.AddressLine1 = "";
+    customerFormDataCopy.AddressLine2 = "";
+    customerFormDataCopy.AddressLine3 = "";
+    customerFormDataCopy.Email = "";
+    customerFormDataCopy.MobileNo = "";
 
-    let customerFormDataCopy = { ...customerFormData }
-    customerFormDataCopy.CountryCode = ''
-    customerFormDataCopy.City_Code = ''
-    customerFormDataCopy.EnglishName = ''
-    customerFormDataCopy.ArabicName = ''
-    customerFormDataCopy.AddressLine1 = ''
-    customerFormDataCopy.AddressLine2 = ''
-    customerFormDataCopy.AddressLine3 = ''
-    customerFormDataCopy.Email = ''
-    customerFormDataCopy.MobileNo = ''
+    setCustomerFormData(customerFormDataCopy);
 
-    setCustomerFormData(customerFormDataCopy)
+    handleFormShow();
+  };
 
-    handleFormShow()
-  }
+  const onEditCustomer = (customerCode) => {
+    setFormTitle("Edit Customer");
+    setFormAction("Update");
 
-  const onEditCustomer = () => {
-    setFormTitle('Edit Customer')
-    setFormAction('Update')
+    //Getting the selected customer
+    const customer = customerData.find(
+      (x) => x.CustomerCode === parseInt(customerCode)
+    );
 
+    //getting the city from country code
+    const citiesByCountry = cityData.filter(
+      (x) => x.Country.Country_Code === customer.Country.CountryCode
+    );
 
+    //updating city state from dropdown
+    setCitySelectData(citiesByCountry);
 
-    handleFormShow()
+    //Mapping form to edit customer
+    const customerFormDataCopy = { ...customerFormData };
+    customerFormDataCopy.CustomerCode = customer.CustomerCode;
+    customerFormDataCopy.CountryCode = customer.Country.CountryCode;
+    customerFormDataCopy.City_Code = customer.City.City_Code;
+    customerFormDataCopy.EnglishName = customer.EnglishName;
+    customerFormDataCopy.ArabicName = customer.ArabicName;
+    customerFormDataCopy.AddressLine1 = customer.AddressLine1;
+    customerFormDataCopy.AddressLine2 = customer.AddressLine2;
+    customerFormDataCopy.AddressLine3 = customer.AddressLine3;
+    customerFormDataCopy.Email = customer.Email;
+    customerFormDataCopy.MobileNo = customer.MobileNo;
 
-  }
+    setCustomerFormData(customerFormDataCopy);
+
+    handleFormShow();
+  };
 
   const onDeleteCustomer = (customerCode) => {
-
-
     let customerDataCopy = customerData.filter(
-      (x) => x.CustomerCode !== customerCode,
-    )
+      (x) => x.CustomerCode !== customerCode
+    );
 
-    setCustomerData(customerDataCopy)
+    setCustomerData(customerDataCopy);
 
-    handleConfirmationClose()
-
-
-  }
+    handleConfirmationClose();
+  };
 
   //#endregion
 
   useEffect(() => {
-    setCountryData(localData.countries())
-    setCityData(localData.cities())
-    setCustomerData(localData.customers())
-  }, [])
+    setCountryData(localData.countries());
+    setCityData(localData.cities());
+    setCustomerData(localData.customers());
+  }, []);
 
   return (
     <div className="col-lg mt-2">
-      <h3>Customer</h3>
+      <h3>Customers</h3>
       <div className="float-end mb-2">
         <button
           type="button"
           onClick={() => {
-            setFormTitle('Create Customer')
-            setFormAction('Create')
-            resetForm()
+            setFormTitle("Create Customer");
+            setFormAction("Create");
+            resetForm();
           }}
           className="btn btn-primary"
         >
@@ -177,7 +198,7 @@ const Customer = (props) => {
                   <button
                     type="button"
                     onClick={() => {
-                      onEditCustomer(customer.CountryCode)
+                      onEditCustomer(customer.CustomerCode);
                     }}
                     className="btn btn-secondary m-2"
                   >
@@ -187,8 +208,8 @@ const Customer = (props) => {
                   <button
                     type="button"
                     onClick={() => {
-                      setConfirmationKeyValue(customer.CustomerCode)
-                      handleConfirmationShow()
+                      setConfirmationKeyValue(customer.CustomerCode);
+                      handleConfirmationShow();
                     }}
                     className="btn btn-danger"
                   >
@@ -211,61 +232,69 @@ const Customer = (props) => {
             <Formik
               validationSchema={schema}
               onSubmit={(values, actions) => {
-                
-                let customerDataCopy = [...customerData]
-
+                let customerDataCopy = [...customerData];
 
                 let country = countryData.find(
-                  (x) => x.CountryCode === parseInt(values.CountryCode),
-                )
-                
-                let city = cityData.find(
-                  (x) => x.City_Code === parseInt(values.City_Code),
-                )
+                  (x) => x.CountryCode === parseInt(values.CountryCode)
+                );
 
-                if (formAction === 'Create') {
+                let city = cityData.find(
+                  (x) => x.City_Code === parseInt(values.City_Code)
+                );
+
+                if (formAction === "Create") {
                   customerDataCopy.push({
                     CustomerCode: 10,
                     EnglishName: values.EnglishName,
                     ArabicName: values.ArabicName,
                     MobileNo: values.MobileNo,
                     Email: values.Email,
-                    Country: { CountryCode: country.CountryCode, CountryName: country.CountryName },
-                    City: { City_Code: city.City_Code, City_Name_English: city.City_Name_English },
+                    Country: {
+                      CountryCode: country.CountryCode,
+                      CountryName: country.CountryName,
+                    },
+                    City: {
+                      City_Code: city.City_Code,
+                      City_Name_English: city.City_Name_English,
+                    },
                     AddressLine1: values.AddressLine1,
                     AddressLine2: values.AddressLine2,
                     AddressLine3: values.AddressLine3,
-                  })
-                } else if (formAction === 'Update') {
-
+                  });
+                } else if (formAction === "Update") {
                   let customerIndex = customerData.findIndex(
-                    (x) => x.CustomerCode === values.CustomerCode,
-                  )
+                    (x) => x.CustomerCode === parseInt(values.CustomerCode)
+                  );
 
                   customerDataCopy[customerIndex].EnglishName =
-                  values.EnglishName;
+                    values.EnglishName;
                   customerDataCopy[customerIndex].ArabicName =
-                  values.ArabicName;
-                  customerDataCopy[customerIndex].MobileNo =
-                  values.MobileNo;
-                  customerDataCopy[customerIndex].Email =
-                  values.Email;
-                  customerDataCopy[customerIndex].Country=country;
-                  customerDataCopy[customerIndex].City=city;
+                    values.ArabicName;
+                  customerDataCopy[customerIndex].MobileNo = values.MobileNo;
+                  customerDataCopy[customerIndex].Email = values.Email;
+                  customerDataCopy[customerIndex].Country = country;
+                  customerDataCopy[customerIndex].City = city;
                   customerDataCopy[customerIndex].AddressLine1 =
-                  values.AddressLine1;
+                    values.AddressLine1;
                   customerDataCopy[customerIndex].AddressLine2 =
-                  values.AddressLine2;
-                  customerDataCopy[customerIndex].AddressLine2 =
-                  values.AddressLine2;
-                 
+                    values.AddressLine2;
+                  customerDataCopy[customerIndex].AddressLine3 =
+                    values.AddressLine3;
                 }
 
-                setCustomerData(customerDataCopy)
+                setCustomerData(customerDataCopy);
 
-                handleFormClose()
+                handleFormClose();
               }}
-              
+              onReset={(values) => {
+                //getting the city from country code
+                const citiesByCountry = cityData.filter(
+                  (x) => x.Country.Country_Code === values.CountryCode
+                );
+
+                //updating city state from dropdown
+                setCitySelectData(citiesByCountry);
+              }}
               initialValues={customerFormData}
             >
               {({
@@ -279,7 +308,6 @@ const Customer = (props) => {
                 errors,
               }) => (
                 <Form noValidate onSubmit={handleSubmit} onReset={handleReset}>
-                  
                   <Form.Group
                     as={Row}
                     className="mb-3"
@@ -290,19 +318,17 @@ const Customer = (props) => {
                     </Form.Label>
                     <Col sm={10}>
                       <Form.Select
-                       
-                        onChange={(e)=>{
-
+                        onChange={(e) => {
                           const { value } = e.target;
-                          console.log(value)
-                           handleChange(e)
+                          console.log(value);
+                          handleChange(e);
 
-                          const citiesByCountry = cityData.filter(x=>x.Country.Country_Code===parseInt(value));
+                          const citiesByCountry = cityData.filter(
+                            (x) => x.Country.Country_Code === parseInt(value)
+                          );
                           // console.log(citiesByCountry)
                           setCitySelectData(citiesByCountry);
-
                         }}
-                        
                         name="CountryCode"
                         value={values.CountryCode}
                         isValid={touched.CountryCode && !errors.CountryCode}
@@ -337,10 +363,7 @@ const Customer = (props) => {
                       >
                         <option value="">Select</option>
                         {citySelectData.map((city) => (
-                          <option
-                            key={city.City_Code}
-                            value={city.City_Code}
-                          >
+                          <option key={city.City_Code} value={city.City_Code}>
                             {city.City_Name_English}
                           </option>
                         ))}
@@ -435,19 +458,20 @@ const Customer = (props) => {
                       AddressLine1
                     </Form.Label>
                     <Col sm={10}>
-                    <FloatingLabel controlId="AddressLine1" >
-                      <Form.Control
-                        as="textarea"
-                        name="AddressLine1"
-                        onChange={handleChange}
-                        style={{ height: '60px' }}
-                        isValid={touched.AddressLine1 && !errors.AddressLine1}
-                        isInvalid={!!errors.AddressLine1}
-                      />
-                     </FloatingLabel>
+                      <FloatingLabel controlId="AddressLine1">
+                        <Form.Control
+                          as="textarea"
+                          name="AddressLine1"
+                          onChange={handleChange}
+                          style={{ height: "60px" }}
+                          isValid={touched.AddressLine1 && !errors.AddressLine1}
+                          isInvalid={!!errors.AddressLine1}
+                          value={values.AddressLine1}
+                        />
+                      </FloatingLabel>
                     </Col>
                   </Form.Group>
-                 
+
                   <Form.Group
                     as={Row}
                     className="mb-3"
@@ -457,16 +481,17 @@ const Customer = (props) => {
                       AddressLine2
                     </Form.Label>
                     <Col sm={10}>
-                    <FloatingLabel controlId="AddressLine2" >
-                      <Form.Control
-                        as="textarea"
-                        name="AddressLine2"
-                        onChange={handleChange}
-                        style={{ height: '60px' }}
-                        isValid={touched.AddressLine2 && !errors.AddressLine2}
-                        isInvalid={!!errors.AddressLine2}
-                      />
-                     </FloatingLabel>
+                      <FloatingLabel controlId="AddressLine2">
+                        <Form.Control
+                          as="textarea"
+                          name="AddressLine2"
+                          onChange={handleChange}
+                          style={{ height: "60px" }}
+                          isValid={touched.AddressLine2 && !errors.AddressLine2}
+                          isInvalid={!!errors.AddressLine2}
+                          value={values.AddressLine2}
+                        />
+                      </FloatingLabel>
                     </Col>
                   </Form.Group>
 
@@ -479,23 +504,24 @@ const Customer = (props) => {
                       AddressLine3
                     </Form.Label>
                     <Col sm={10}>
-                    <FloatingLabel controlId="AddressLine3" >
-                      <Form.Control
-                        as="textarea"
-                        name="AddressLine3"
-                        onChange={handleChange}
-                        style={{ height: '60px' }}
-                        isValid={touched.AddressLine3 && !errors.AddressLine3}
-                        isInvalid={!!errors.AddressLine3}
-                      />
-                     </FloatingLabel>
+                      <FloatingLabel controlId="AddressLine3">
+                        <Form.Control
+                          as="textarea"
+                          name="AddressLine3"
+                          onChange={handleChange}
+                          style={{ height: "60px" }}
+                          isValid={touched.AddressLine3 && !errors.AddressLine3}
+                          isInvalid={!!errors.AddressLine3}
+                          value={values.AddressLine3}
+                        />
+                      </FloatingLabel>
                     </Col>
                   </Form.Group>
 
                   <Form.Group as={Row} className="mb-3">
                     <Col sm={{ span: 10, offset: 2 }}>
                       <Button className="btn btn-primary" type="submit">
-                        {formAction === 'Create' ? 'Submit' : 'Update'}
+                        {formAction === "Create" ? "Submit" : "Update"}
                       </Button>
 
                       <Button className="btn btn-secondary m-2" type="reset">
@@ -522,7 +548,7 @@ const Customer = (props) => {
         />
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Customer
+export default Customer;
