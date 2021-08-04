@@ -200,13 +200,13 @@ const Cities = (props) => {
                     let cityIndex = cityData.findIndex(
                       (x) => x.City_Code === values.City_Code,
                     )
-                    cityData[cityIndex].City_Name_English =
+                    cityDataCopy[cityIndex].City_Name_English =
                       values.City_Name_English
-                    cityData[cityIndex].City_Name_Arabic =
+                    cityDataCopy[cityIndex].City_Name_Arabic =
                       values.City_Name_Arabic
-                    cityData[cityIndex].Country.Country_Code =
+                    cityDataCopy[cityIndex].Country.Country_Code =
                       values.Country_Code
-                    cityData[cityIndex].Country.Country_Name =
+                    cityDataCopy[cityIndex].Country.Country_Name =
                       country.CountryName
                   }
 

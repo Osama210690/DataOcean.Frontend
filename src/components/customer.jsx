@@ -8,6 +8,7 @@ import {
   Button,
   Form,
   InputGroup,
+  FloatingLabel
 } from 'react-bootstrap'
 import localData from '../localData'
 import * as yup from 'yup'
@@ -21,6 +22,8 @@ const Customer = (props) => {
 
   const [countryData, setCountryData] = useState([])
   const [cityData, setCityData] = useState([])
+  const [citySelectData, setCitySelectData] = useState([])
+
   const [customerData, setCustomerData] = useState([])
 
   const [customerFormData, setCustomerFormData] = useState({
@@ -53,7 +56,7 @@ const Customer = (props) => {
   const schema = yup.object().shape({
     EnglishName: yup.string().max(50).required(),
     ArabicName: yup.string().max(50).required(),
-    MobileNo: yup.number().required().positive().integer().max(10),
+    MobileNo: yup.number().required() ,
     Email: yup.string().email().max(50).required(),
     CountryCode: yup.string().max(4).required(),
     City_Code: yup.string().max(4).required(),
@@ -76,6 +79,7 @@ const Customer = (props) => {
 
   //#region Form Actions
   const resetForm = () => {
+
     let customerFormDataCopy = { ...customerFormData }
     customerFormDataCopy.CountryCode = ''
     customerFormDataCopy.City_Code = ''
@@ -92,14 +96,35 @@ const Customer = (props) => {
     handleFormShow()
   }
 
-  const onEditCustomer = () => {}
+  const onEditCustomer = () => {
+    setFormTitle('Edit Customer')
+    setFormAction('Update')
 
-  const onDeleteCustomer = () => {}
+
+
+    handleFormShow()
+
+  }
+
+  const onDeleteCustomer = (customerCode) => {
+
+
+    let customerDataCopy = customerData.filter(
+      (x) => x.CustomerCode !== customerCode,
+    )
+
+    setCustomerData(customerDataCopy)
+
+    handleConfirmationClose()
+
+
+  }
 
   //#endregion
 
   useEffect(() => {
     setCountryData(localData.countries())
+    setCityData(localData.cities())
     setCustomerData(localData.customers())
   }, [])
 
@@ -162,7 +187,7 @@ const Customer = (props) => {
                   <button
                     type="button"
                     onClick={() => {
-                      setConfirmationKeyValue(customer.CountryCode)
+                      setConfirmationKeyValue(customer.CustomerCode)
                       handleConfirmationShow()
                     }}
                     className="btn btn-danger"
@@ -186,8 +211,61 @@ const Customer = (props) => {
             <Formik
               validationSchema={schema}
               onSubmit={(values, actions) => {
+                
+                let customerDataCopy = [...customerData]
+
+
+                let country = countryData.find(
+                  (x) => x.CountryCode === parseInt(values.CountryCode),
+                )
+                
+                let city = cityData.find(
+                  (x) => x.City_Code === parseInt(values.City_Code),
+                )
+
+                if (formAction === 'Create') {
+                  customerDataCopy.push({
+                    CustomerCode: 10,
+                    EnglishName: values.EnglishName,
+                    ArabicName: values.ArabicName,
+                    MobileNo: values.MobileNo,
+                    Email: values.Email,
+                    Country: { CountryCode: country.CountryCode, CountryName: country.CountryName },
+                    City: { City_Code: city.City_Code, City_Name_English: city.City_Name_English },
+                    AddressLine1: values.AddressLine1,
+                    AddressLine2: values.AddressLine2,
+                    AddressLine3: values.AddressLine3,
+                  })
+                } else if (formAction === 'Update') {
+
+                  let customerIndex = customerData.findIndex(
+                    (x) => x.CustomerCode === values.CustomerCode,
+                  )
+
+                  customerDataCopy[customerIndex].EnglishName =
+                  values.EnglishName;
+                  customerDataCopy[customerIndex].ArabicName =
+                  values.ArabicName;
+                  customerDataCopy[customerIndex].MobileNo =
+                  values.MobileNo;
+                  customerDataCopy[customerIndex].Email =
+                  values.Email;
+                  customerDataCopy[customerIndex].Country=country;
+                  customerDataCopy[customerIndex].City=city;
+                  customerDataCopy[customerIndex].AddressLine1 =
+                  values.AddressLine1;
+                  customerDataCopy[customerIndex].AddressLine2 =
+                  values.AddressLine2;
+                  customerDataCopy[customerIndex].AddressLine2 =
+                  values.AddressLine2;
+                 
+                }
+
+                setCustomerData(customerDataCopy)
+
                 handleFormClose()
               }}
+              
               initialValues={customerFormData}
             >
               {({
@@ -201,6 +279,74 @@ const Customer = (props) => {
                 errors,
               }) => (
                 <Form noValidate onSubmit={handleSubmit} onReset={handleReset}>
+                  
+                  <Form.Group
+                    as={Row}
+                    className="mb-3"
+                    controlId="formHorizontalEmail"
+                  >
+                    <Form.Label column sm={2}>
+                      Country
+                    </Form.Label>
+                    <Col sm={10}>
+                      <Form.Select
+                       
+                        onChange={(e)=>{
+
+                          const { value } = e.target;
+                          console.log(value)
+                           handleChange(e)
+
+                          const citiesByCountry = cityData.filter(x=>x.Country.Country_Code===parseInt(value));
+                          // console.log(citiesByCountry)
+                          setCitySelectData(citiesByCountry);
+
+                        }}
+                        
+                        name="CountryCode"
+                        value={values.CountryCode}
+                        isValid={touched.CountryCode && !errors.CountryCode}
+                      >
+                        <option value="">Select</option>
+                        {countryData.map((country) => (
+                          <option
+                            key={country.CountryCode}
+                            value={country.CountryCode}
+                          >
+                            {country.CountryName}
+                          </option>
+                        ))}
+                      </Form.Select>
+                    </Col>
+                  </Form.Group>
+
+                  <Form.Group
+                    as={Row}
+                    className="mb-3"
+                    controlId="formHorizontalEmail"
+                  >
+                    <Form.Label column sm={2}>
+                      City
+                    </Form.Label>
+                    <Col sm={10}>
+                      <Form.Select
+                        onChange={handleChange}
+                        name="City_Code"
+                        value={values.City_Code}
+                        isValid={touched.City_Code && !errors.City_Code}
+                      >
+                        <option value="">Select</option>
+                        {citySelectData.map((city) => (
+                          <option
+                            key={city.City_Code}
+                            value={city.City_Code}
+                          >
+                            {city.City_Name_English}
+                          </option>
+                        ))}
+                      </Form.Select>
+                    </Col>
+                  </Form.Group>
                   <Form.Group
                     as={Row}
                     className="mb-3"
@@ -244,28 +390,105 @@ const Customer = (props) => {
                   <Form.Group
                     as={Row}
                     className="mb-3"
-                    controlId="formHorizontalEmail"
+                    controlId="formHorizontalPassword"
                   >
                     <Form.Label column sm={2}>
-                      Country
+                      Email
                     </Form.Label>
                     <Col sm={10}>
-                      <Form.Select
+                      <Form.Control
+                        name="Email"
+                        type="text"
+                        value={values.Email}
                         onChange={handleChange}
-                        name="CountryCode"
-                        value={values.CountryCode}
-                        isValid={touched.CountryCode && !errors.CountryCode}
-                      >
-                        <option value="">Select</option>
-                        {countryData.map((country) => (
-                          <option
-                            key={country.CountryCode}
-                            value={country.CountryCode}
-                          >
-                            {country.CountryName}
-                          </option>
-                        ))}
-                      </Form.Select>
+                        isValid={touched.Email && !errors.Email}
+                        isInvalid={!!errors.Email}
+                      />
+                    </Col>
+                  </Form.Group>
+
+                  <Form.Group
+                    as={Row}
+                    className="mb-3"
+                    controlId="formHorizontalPassword"
+                  >
+                    <Form.Label column sm={2}>
+                      Mobile
+                    </Form.Label>
+                    <Col sm={10}>
+                      <Form.Control
+                        name="MobileNo"
+                        type="number"
+                        value={values.MobileNo}
+                        onChange={handleChange}
+                        isValid={touched.MobileNo && !errors.MobileNo}
+                        isInvalid={!!errors.MobileNo}
+                      />
+                    </Col>
+                  </Form.Group>
+                  <Form.Group
+                    as={Row}
+                    className="mb-3"
+                    controlId="formHorizontalPassword"
+                  >
+                    <Form.Label column sm={2}>
+                      AddressLine1
+                    </Form.Label>
+                    <Col sm={10}>
+                    <FloatingLabel controlId="AddressLine1" >
+                      <Form.Control
+                        as="textarea"
+                        name="AddressLine1"
+                        onChange={handleChange}
+                        style={{ height: '60px' }}
+                        isValid={touched.AddressLine1 && !errors.AddressLine1}
+                        isInvalid={!!errors.AddressLine1}
+                      />
+                     </FloatingLabel>
+                    </Col>
+                  </Form.Group>
+                 
+                  <Form.Group
+                    as={Row}
+                    className="mb-3"
+                    controlId="formHorizontalPassword"
+                  >
+                    <Form.Label column sm={2}>
+                      AddressLine2
+                    </Form.Label>
+                    <Col sm={10}>
+                    <FloatingLabel controlId="AddressLine2" >
+                      <Form.Control
+                        as="textarea"
+                        name="AddressLine2"
+                        onChange={handleChange}
+                        style={{ height: '60px' }}
+                        isValid={touched.AddressLine2 && !errors.AddressLine2}
+                        isInvalid={!!errors.AddressLine2}
+                      />
+                     </FloatingLabel>
+                    </Col>
+                  </Form.Group>
+
+                  <Form.Group
+                    as={Row}
+                    className="mb-3"
+                    controlId="formHorizontalPassword"
+                  >
+                    <Form.Label column sm={2}>
+                      AddressLine3
+                    </Form.Label>
+                    <Col sm={10}>
+                    <FloatingLabel controlId="AddressLine3" >
+                      <Form.Control
+                        as="textarea"
+                        name="AddressLine3"
+                        onChange={handleChange}
+                        style={{ height: '60px' }}
+                        isValid={touched.AddressLine3 && !errors.AddressLine3}
+                        isInvalid={!!errors.AddressLine3}
+                      />
+                     </FloatingLabel>
                     </Col>
                   </Form.Group>
 
