@@ -31,7 +31,7 @@ const Country = (props) => {
 
   //#endregion
 
-  // Modal Visibility State
+  //#region Modal Visibility State
   const [show, setShow] = useState(false);
 
   const handleClose = () => setShow(false);
