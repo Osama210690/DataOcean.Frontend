@@ -5,28 +5,29 @@ import {
   Link,
   Redirect,
   NavLink,
-} from 'react-router-dom'
-import React, { useEffect, useState } from 'react'
-import logo from './logo.svg'
-import './App.css'
-import 'bootstrap/dist/css/bootstrap.min.css'
-import 'jquery/dist/jquery.min.js'
-import 'bootstrap/dist/js/bootstrap.min.js'
-import LoginForm from './components/loginForm'
-import SprocForm from './components/sprocForm'
-import auth, { logout } from '../src/services/authService'
-import Logout from './components/logout'
-import Home from './components/home'
-import Country from './components/country'
-import Cities from './components/cities'
-import Customer from './components/customer'
-import ItemMaster from './components/itemMaster'
-import Invoice from './components/invoice'
+} from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import logo from "./logo.svg";
+import "./App.css";
+import "bootstrap/dist/css/bootstrap.min.css";
+import "devextreme/dist/css/dx.light.css";
+import "jquery/dist/jquery.min.js";
+import "bootstrap/dist/js/bootstrap.min.js";
+import LoginForm from "./components/loginForm";
+import SprocForm from "./components/sprocForm";
+import auth, { logout } from "../src/services/authService";
+import Logout from "./components/logout";
+import Home from "./components/home";
+import Country from "./components/country";
+import Cities from "./components/cities";
+import Customer from "./components/customer";
+import ItemMaster from "./components/itemMaster";
+import InvoiceMaster from "./components/invoiceMaster";
 
 function App(props) {
-  const authUser = auth.getCurrentUser()
+  const authUser = auth.getCurrentUser();
 
-  console.log(props)
+  console.log(props);
 
   return (
     <div className="container" style={{ marginTop: 10 }}>
@@ -71,7 +72,7 @@ function App(props) {
               </NavLink>
             </li>
             <li className="nav-item active">
-              <NavLink className="nav-link" to="/invoice">
+              <NavLink className="nav-link" to="/invoiceMaster">
                 Invoice
               </NavLink>
             </li>
@@ -86,10 +87,10 @@ function App(props) {
         <Route path="/city" component={Cities}></Route>
         <Route path="/customer" component={Customer}></Route>
         <Route path="/items" component={ItemMaster}></Route>
-        <Route path="/invoice" component={Invoice}></Route>
+        <Route path="/invoiceMaster" component={InvoiceMaster}></Route>
       </Switch>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
