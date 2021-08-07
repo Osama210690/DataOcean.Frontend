@@ -13,6 +13,7 @@ import localData from "../localData";
 import * as yup from "yup";
 import { Formik } from "formik";
 import ConfirmModal from "./common/confirmModal";
+import countryService from "../services/countryService";
 
 const Country = (props) => {
   //#region Form States
@@ -22,9 +23,9 @@ const Country = (props) => {
   const [countryData, setCountryData] = useState([]);
 
   const [countryFormData, setCountryFormData] = useState({
-    CountryCode: "",
-    CountryNameEng: "",
-    CountryNameAr: "",
+    country_Code: "",
+    country_Name_English: "",
+    country_Name_Arabic: "",
   });
 
   const [formAction, setFormAction] = useState("");
@@ -42,41 +43,100 @@ const Country = (props) => {
   //#region Form Actions
   const resetForm = () => {
     let countryFormDataCopy = { ...countryFormData };
-    countryFormDataCopy.CountryCode = "";
-    countryFormDataCopy.CountryNameEng = "";
-    countryFormDataCopy.CountryNameAr = "";
+    countryFormDataCopy.country_Code = "";
+    countryFormDataCopy.country_Name_English = "";
+    countryFormDataCopy.country_Name_Arabic = "";
 
     setCountryFormData(countryFormDataCopy);
 
     handleShow();
   };
 
-  const onEditCountry = (countryCode) => {
+  const getAllCountries = async () => {
+    try {
+      const result = await countryService.getAllCountries();
+      setCountryData(result.data);
+    } catch (error) {
+      console.log(error.response);
+    }
+  };
+
+  const createCountry = async (values) => {
+    try {
+      let countryDataCopy = [...countryData];
+
+      let payload = {
+        country_Name_English: values.country_Name_English,
+        country_Name_Arabic: values.country_Name_Arabic,
+      };
+
+      if (formAction === "Create") {
+        await countryService.createCountry(payload).then((result) => {
+          countryDataCopy.push({
+            country_Code: result.data.country_Code,
+            country_Name_English: values.country_Name_English,
+            country_Name_Arabic: values.country_Name_Arabic,
+          });
+        });
+      } else if (formAction === "Update") {
+        let payload = {
+          country_Code: values.country_Code,
+          country_Name_English: values.country_Name_English,
+          country_Name_Arabic: values.country_Name_Arabic,
+        };
+        await countryService.updateCountry(payload).then((result) => {
+          let countryIndex = countryData.findIndex(
+            (x) => x.country_Code === result.data.country_Code
+          );
+
+          countryDataCopy[countryIndex].country_Name_English =
+            values.country_Name_English;
+          countryDataCopy[countryIndex].country_Name_Arabic =
+            values.country_Name_Arabic;
+        });
+      }
+
+      setCountryData(countryDataCopy);
+
+      handleClose();
+    } catch (error) {
+      alert(error);
+    }
+  };
+
+  const onEditCountry = (country_Code) => {
     setFormTitle("Edit Country");
     setFormAction("Update");
 
     let selectedCountry = countryData.find(
-      (x) => x.CountryCode === countryCode
+      (x) => x.country_Code === country_Code
     );
 
     let countryFormDataCopy = { ...countryFormData };
-    countryFormDataCopy.CountryCode = selectedCountry.CountryCode;
-    countryFormDataCopy.CountryNameEng = selectedCountry.CountryName;
-    countryFormDataCopy.CountryNameAr = selectedCountry.CountryNameArabic;
+    countryFormDataCopy.country_Code = selectedCountry.country_Code;
+    countryFormDataCopy.country_Name_English =
+      selectedCountry.country_Name_English;
+    countryFormDataCopy.country_Name_Arabic =
+      selectedCountry.country_Name_Arabic;
 
     setCountryFormData(countryFormDataCopy);
 
     handleShow();
   };
 
-  const onDeleteCountry = (countryCode) => {
-    handleConfirmationClose();
+  const onDeleteCountry = async (country_Code) => {
+    try {
+      await countryService.deleteCountry(country_Code).then((result) => {
+        let countryDataCopy = countryData.filter(
+          (x) => x.country_Code !== result.data.country_Code
+        );
 
-    let countryDataCopy = countryData.filter(
-      (x) => x.CountryCode !== countryCode
-    );
-
-    setCountryData(countryDataCopy);
+        setCountryData(countryDataCopy);
+        handleConfirmationClose();
+      });
+    } catch (error) {
+      alert(error);
+    }
   };
 
   //#endregion
@@ -84,8 +144,8 @@ const Country = (props) => {
   //#region Validation Schema
 
   const schema = yup.object().shape({
-    CountryNameEng: yup.string().max(50).required(),
-    CountryNameAr: yup.string().max(50).required(),
+    country_Name_English: yup.string().max(50).required(),
+    country_Name_Arabic: yup.string().max(50).required(),
   });
 
   //#endregion
@@ -101,7 +161,7 @@ const Country = (props) => {
   //#endregion
 
   useEffect(() => {
-    setCountryData(localData.countries());
+    getAllCountries();
   }, []);
 
   return (
@@ -133,15 +193,15 @@ const Country = (props) => {
           </thead>
           <tbody>
             {countryData.map((country) => (
-              <tr key={country.CountryCode}>
-                <td>{country.CountryCode}</td>
-                <td>{country.CountryName}</td>
-                <td>{country.CountryNameArabic}</td>
+              <tr key={country.country_Code}>
+                <td>{country.country_Code}</td>
+                <td>{country.country_Name_English}</td>
+                <td>{country.country_Name_Arabic}</td>
                 <td>
                   <button
                     type="button"
                     onClick={() => {
-                      onEditCountry(country.CountryCode);
+                      onEditCountry(country.country_Code);
                     }}
                     className="btn btn-secondary m-2"
                   >
@@ -151,7 +211,7 @@ const Country = (props) => {
                   <button
                     type="button"
                     onClick={() => {
-                      setConfirmationKeyValue(country.CountryCode);
+                      setConfirmationKeyValue(country.country_Code);
                       handleConfirmationShow();
                     }}
                     className="btn btn-danger"
@@ -175,26 +235,7 @@ const Country = (props) => {
             <Formik
               validationSchema={schema}
               onSubmit={(values, actions) => {
-                let countryDataCopy = [...countryData];
-                if (formAction === "Create") {
-                  countryDataCopy.push({
-                    CountryCode: 103,
-                    CountryName: values.CountryNameEng,
-                    CountryNameArabic: values.CountryNameAr,
-                  });
-                } else if (formAction === "Update") {
-                  let countryIndex = countryData.findIndex(
-                    (x) => x.CountryCode === values.CountryCode
-                  );
-                  countryDataCopy[countryIndex].CountryName =
-                    values.CountryNameEng;
-                  countryDataCopy[countryIndex].CountryNameArabic =
-                    values.CountryNameAr;
-                }
-
-                setCountryData(countryDataCopy);
-
-                handleClose();
+                createCountry(values);
               }}
               initialValues={countryFormData}
             >
@@ -219,14 +260,15 @@ const Country = (props) => {
                     </Form.Label>
                     <Col sm={10}>
                       <Form.Control
-                        name="CountryNameEng"
+                        name="country_Name_English"
                         type="text"
-                        value={values.CountryNameEng}
+                        value={values.country_Name_English}
                         onChange={handleChange}
                         isValid={
-                          touched.CountryNameEng && !errors.CountryNameEng
+                          touched.country_Name_English &&
+                          !errors.country_Name_English
                         }
-                        isInvalid={!!errors.CountryNameEng}
+                        isInvalid={!!errors.country_Name_English}
                       />
                     </Col>
                   </Form.Group>
@@ -241,12 +283,15 @@ const Country = (props) => {
                     </Form.Label>
                     <Col sm={10}>
                       <Form.Control
-                        name="CountryNameAr"
+                        name="country_Name_Arabic"
                         type="text"
-                        value={values.CountryNameAr}
+                        value={values.country_Name_Arabic}
                         onChange={handleChange}
-                        isValid={touched.CountryNameAr && !errors.CountryNameAr}
-                        isInvalid={!!errors.CountryNameAr}
+                        isValid={
+                          touched.country_Name_Arabic &&
+                          !errors.country_Name_Arabic
+                        }
+                        isInvalid={!!errors.country_Name_Arabic}
                       />
                     </Col>
                   </Form.Group>
