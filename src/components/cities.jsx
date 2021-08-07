@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect } from "react";
 import {
   Table,
   Container,
@@ -8,105 +8,184 @@ import {
   Button,
   Form,
   InputGroup,
-} from 'react-bootstrap'
-import localData from '../localData'
-import * as yup from 'yup'
-import { Formik } from 'formik'
-import ConfirmModal from './common/confirmModal'
+} from "react-bootstrap";
+import localData from "../localData";
+import * as yup from "yup";
+import { Formik } from "formik";
+import ConfirmModal from "./common/confirmModal";
+import countryService from "../services/countryService";
+import cityService from "../services/cityService";
 
 const Cities = (props) => {
   //#region Form States
 
-  const [formTitle, setFormTitle] = useState('')
+  const [formTitle, setFormTitle] = useState("");
 
-  const [cityData, setCityData] = useState([])
+  const [cityData, setCityData] = useState([]);
 
-  const [countryData, setCountryData] = useState([])
+  const [countryData, setCountryData] = useState([]);
 
   const [cityFormData, setCityFormData] = useState({
-    City_Code: '',
-    Country_Code: '',
-    City_Name_English: '',
-    City_Name_Arabic: '',
-  })
+    city_Code: "",
+    country_Code: "",
+    city_Name_English: "",
+    city_Name_Arabic: "",
+  });
 
-  const [formAction, setFormAction] = useState('')
+  const [formAction, setFormAction] = useState("");
 
   //#endregion
 
   //#region Form Actions
 
   const resetForm = () => {
-    let cityFormDataCopy = { ...cityFormData }
-    cityFormDataCopy.City_Code = ''
-    cityFormDataCopy.City_Name_Arabic = ''
-    cityFormDataCopy.City_Name_English = ''
-    cityFormDataCopy.Country_Code = ''
+    let cityFormDataCopy = { ...cityFormData };
+    cityFormDataCopy.city_Code = "";
+    cityFormDataCopy.city_Name_Arabic = "";
+    cityFormDataCopy.city_Name_English = "";
+    cityFormDataCopy.country_Code = "";
 
-    setCityFormData(cityFormDataCopy)
+    setCityFormData(cityFormDataCopy);
 
-    handleFormShow()
-  }
+    handleFormShow();
+  };
+
+  const getAllCountries = async () => {
+    try {
+      const result = await countryService.getAllCountries();
+
+      console.log("countries", result.data);
+      setCountryData(result.data);
+    } catch (error) {
+      console.log(error.response);
+    }
+  };
+
+  const getAllCities = async () => {
+    try {
+      const result = await cityService.getAllCities();
+      setCityData(result.data);
+    } catch (error) {
+      console.log(error.response);
+    }
+  };
 
   const onEditCity = (cityCode) => {
-    setFormTitle('Edit City')
-    setFormAction('Update')
+    setFormTitle("Edit City");
+    setFormAction("Update");
 
-    let selectedCity = cityData.find((x) => x.City_Code === cityCode)
+    let selectedCity = cityData.find((x) => x.city_Code === cityCode);
 
-    let cityFormDataCopy = { ...cityFormData }
-    cityFormDataCopy.City_Code = selectedCity.City_Code
-    cityFormDataCopy.Country_Code = selectedCity.Country.Country_Code
-    cityFormDataCopy.City_Name_English = selectedCity.City_Name_English
-    cityFormDataCopy.City_Name_Arabic = selectedCity.City_Name_Arabic
+    let cityFormDataCopy = { ...cityFormData };
+    cityFormDataCopy.city_Code = selectedCity.city_Code;
+    cityFormDataCopy.country_Code = selectedCity.country.country_Code;
+    cityFormDataCopy.city_Name_English = selectedCity.city_Name_English;
+    cityFormDataCopy.city_Name_Arabic = selectedCity.city_Name_Arabic;
 
-    setCityFormData(cityFormDataCopy)
+    setCityFormData(cityFormDataCopy);
 
-    handleFormShow()
-  }
+    handleFormShow();
+  };
 
-  const onDeleteCity = (cityCode) => {
-    handleConfirmationClose()
+  const onDeleteCity = async (city_Code) => {
+    await cityService.deleteCity(city_Code).then((result) => {
+      let cityDataCopy = cityData.filter(
+        (x) => x.city_Code !== result.data.city_Code
+      );
+      setCityData(cityDataCopy);
 
-    let cityDataCopy = cityData.filter((x) => x.City_Code !== cityCode)
+      handleConfirmationClose();
+    });
+  };
 
-    setCityData(cityDataCopy)
-  }
+  const createCity = async (values) => {
+    try {
+      let cityDataCopy = [...cityData];
+      let country = countryData.find(
+        (x) => x.country_Code === parseInt(values.country_Code)
+      );
+
+      // let payload = {
+      //   city_Code: 0,
+      //   country: { country_Code: values.country_Code },
+      //   city_Name_English: values.city_Name_English,
+      //   city_Name_Arabic: values.city_Name_Arabic,
+      // };
+
+      let payload = {
+        city_Code: 0,
+        city_Name_English: values.city_Name_English,
+        city_Name_Arabic: values.city_Name_Arabic,
+        country: {
+          country_Code: values.country_Code,
+          country_Name_English: country.country_Name_English,
+          country_Name_Arabic: country.city_Name_Arabic,
+        },
+      };
+
+      if (formAction === "Create") {
+        await cityService.createCity(payload).then((result) => {
+          payload.city_Code = result.data.city_Code;
+
+          cityDataCopy.push(payload);
+        });
+      } else if (formAction === "Update") {
+        let cityIndex = cityData.findIndex(
+          (x) => x.city_Code === values.city_Code
+        );
+        cityDataCopy[cityIndex].city_Code = values.city_Code;
+        cityDataCopy[cityIndex].city_Name_English = values.city_Name_English;
+        cityDataCopy[cityIndex].city_Name_Arabic = values.city_Name_Arabic;
+        cityDataCopy[cityIndex].country.country_Code = values.country_Code;
+        cityDataCopy[cityIndex].country.country_Name_English =
+          country.country_Name_English;
+        cityDataCopy[cityIndex].country.country_Name_Arabic =
+          country.country_Name_Arabic;
+      }
+
+      setCityData(cityDataCopy);
+
+      handleFormClose();
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   //#endregion
 
   //#region Form Visibility State
-  const [formShow, setFormShow] = useState(false)
+  const [formShow, setFormShow] = useState(false);
 
-  const handleFormClose = () => setFormShow(false)
-  const handleFormShow = () => setFormShow(true)
+  const handleFormClose = () => setFormShow(false);
+  const handleFormShow = () => setFormShow(true);
 
   //#endregion
 
   //#region Validation Schema
 
   const schema = yup.object().shape({
-    Country_Code: yup.string().required(),
-    City_Name_English: yup.string().max(50).required(),
-    City_Name_Arabic: yup.string().max(50).required(),
-  })
+    country_Code: yup.string().required(),
+    city_Name_English: yup.string().max(50).required(),
+    city_Name_Arabic: yup.string().max(50).required(),
+  });
 
   //#endregion
 
   //#region Confirmation Modal Visibility State
-  const [showConfirmation, setShowConfirmation] = useState(false)
+  const [showConfirmation, setShowConfirmation] = useState(false);
 
-  const handleConfirmationClose = () => setShowConfirmation(false)
-  const handleConfirmationShow = () => setShowConfirmation(true)
+  const handleConfirmationClose = () => setShowConfirmation(false);
+  const handleConfirmationShow = () => setShowConfirmation(true);
 
-  const [confirmationKeyValue, setConfirmationKeyValue] = useState('')
+  const [confirmationKeyValue, setConfirmationKeyValue] = useState("");
 
   //#endregion
 
   useEffect(() => {
-    setCountryData(localData.countries())
-    setCityData(localData.cities())
-  }, [])
+    getAllCountries().then(() => {
+      getAllCities();
+    });
+  }, []);
 
   return (
     <div className="col-lg-8 mt-2">
@@ -115,9 +194,9 @@ const Cities = (props) => {
         <button
           type="button"
           onClick={() => {
-            setFormTitle('Create City')
-            setFormAction('Create')
-            resetForm()
+            setFormTitle("Create City");
+            setFormAction("Create");
+            resetForm();
           }}
           className="btn btn-primary"
         >
@@ -138,16 +217,16 @@ const Cities = (props) => {
           </thead>
           <tbody>
             {cityData.map((city) => (
-              <tr key={city.City_Code}>
-                <td>{city.City_Code}</td>
-                <td>{city.Country.Country_Name}</td>
-                <td>{city.City_Name_English}</td>
-                <td>{city.City_Name_Arabic}</td>
+              <tr key={city.city_Code}>
+                <td>{city.city_Code}</td>
+                <td>{city.country.country_Name_English}</td>
+                <td>{city.city_Name_English}</td>
+                <td>{city.city_Name_Arabic}</td>
                 <td>
                   <button
                     type="button"
                     onClick={() => {
-                      onEditCity(city.City_Code)
+                      onEditCity(city.city_Code);
                     }}
                     className="btn btn-secondary m-2"
                   >
@@ -157,8 +236,8 @@ const Cities = (props) => {
                   <button
                     type="button"
                     onClick={() => {
-                      setConfirmationKeyValue(city.City_Code)
-                      handleConfirmationShow()
+                      setConfirmationKeyValue(city.city_Code);
+                      handleConfirmationShow();
                     }}
                     className="btn btn-danger"
                   >
@@ -182,37 +261,7 @@ const Cities = (props) => {
               <Formik
                 validationSchema={schema}
                 onSubmit={(values) => {
-                  let cityDataCopy = [...cityData]
-                  let country = countryData.find(
-                    (x) => x.CountryCode === parseInt(values.Country_Code),
-                  )
-                  if (formAction === 'Create') {
-                    cityDataCopy.push({
-                      City_Code: 510,
-                      City_Name_English: values.City_Name_English,
-                      City_Name_Arabic: values.City_Name_Arabic,
-                      Country: {
-                        Country_Code: values.Country_Code,
-                        Country_Name: country.CountryName,
-                      },
-                    })
-                  } else if (formAction === 'Update') {
-                    let cityIndex = cityData.findIndex(
-                      (x) => x.City_Code === values.City_Code,
-                    )
-                    cityDataCopy[cityIndex].City_Name_English =
-                      values.City_Name_English
-                    cityDataCopy[cityIndex].City_Name_Arabic =
-                      values.City_Name_Arabic
-                    cityDataCopy[cityIndex].Country.Country_Code =
-                      values.Country_Code
-                    cityDataCopy[cityIndex].Country.Country_Name =
-                      country.CountryName
-                  }
-
-                  setCityData(cityDataCopy)
-
-                  handleFormClose()
+                  createCity(values);
                 }}
                 initialValues={cityFormData}
               >
@@ -242,18 +291,18 @@ const Cities = (props) => {
                       <Col sm={10}>
                         <Form.Select
                           onChange={handleChange}
-                          name="Country_Code"
-                          value={values.Country_Code}
+                          name="country_Code"
+                          value={values.country_Code}
                           aria-label="Default select example"
-                          isValid={touched.Country_Code && !errors.Country_Code}
+                          isValid={touched.country_Code && !errors.country_Code}
                         >
                           <option value="">Select</option>
                           {countryData.map((country) => (
                             <option
-                              key={country.CountryCode}
-                              value={country.CountryCode}
+                              key={country.country_Code}
+                              value={country.country_Code}
                             >
-                              {country.CountryName}
+                              {country.country_Name_English}
                             </option>
                           ))}
                         </Form.Select>
@@ -270,15 +319,15 @@ const Cities = (props) => {
                       </Form.Label>
                       <Col sm={10}>
                         <Form.Control
-                          name="City_Name_English"
+                          name="city_Name_English"
                           type="text"
-                          value={values.City_Name_English}
+                          value={values.city_Name_English}
                           onChange={handleChange}
                           isValid={
-                            touched.City_Name_English &&
-                            !errors.City_Name_English
+                            touched.city_Name_English &&
+                            !errors.city_Name_English
                           }
-                          isInvalid={!!errors.City_Name_English}
+                          isInvalid={!!errors.city_Name_English}
                         />
                       </Col>
                     </Form.Group>
@@ -293,14 +342,14 @@ const Cities = (props) => {
                       </Form.Label>
                       <Col sm={10}>
                         <Form.Control
-                          name="City_Name_Arabic"
+                          name="city_Name_Arabic"
                           type="text"
-                          value={values.City_Name_Arabic}
+                          value={values.city_Name_Arabic}
                           onChange={handleChange}
                           isValid={
-                            touched.City_Name_Arabic && !errors.City_Name_Arabic
+                            touched.city_Name_Arabic && !errors.city_Name_Arabic
                           }
-                          isInvalid={!!errors.City_Name_Arabic}
+                          isInvalid={!!errors.city_Name_Arabic}
                         />
                       </Col>
                     </Form.Group>
@@ -308,7 +357,7 @@ const Cities = (props) => {
                     <Form.Group as={Row} className="mb-3">
                       <Col sm={{ span: 10, offset: 2 }}>
                         <Button className="btn btn-primary" type="submit">
-                          {formAction === 'Create' ? 'Submit' : 'Update'}
+                          {formAction === "Create" ? "Submit" : "Update"}
                         </Button>
                         <Button className="btn btn-secondary m-2" type="reset">
                           Reset
@@ -335,7 +384,7 @@ const Cities = (props) => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Cities
+export default Cities;

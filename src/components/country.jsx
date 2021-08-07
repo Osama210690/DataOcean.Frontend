@@ -64,12 +64,11 @@ const Country = (props) => {
   const createCountry = async (values) => {
     try {
       let countryDataCopy = [...countryData];
-
       let payload = {
+        country_Code: 0,
         country_Name_English: values.country_Name_English,
         country_Name_Arabic: values.country_Name_Arabic,
       };
-
       if (formAction === "Create") {
         await countryService.createCountry(payload).then((result) => {
           countryDataCopy.push({
@@ -79,11 +78,6 @@ const Country = (props) => {
           });
         });
       } else if (formAction === "Update") {
-        let payload = {
-          country_Code: values.country_Code,
-          country_Name_English: values.country_Name_English,
-          country_Name_Arabic: values.country_Name_Arabic,
-        };
         await countryService.updateCountry(payload).then((result) => {
           let countryIndex = countryData.findIndex(
             (x) => x.country_Code === result.data.country_Code
