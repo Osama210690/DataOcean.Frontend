@@ -78,6 +78,8 @@ const Country = (props) => {
           });
         });
       } else if (formAction === "Update") {
+        payload.country_Code = values.country_Code;
+
         await countryService.updateCountry(payload).then((result) => {
           let countryIndex = countryData.findIndex(
             (x) => x.country_Code === result.data.country_Code

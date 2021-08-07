@@ -10,10 +10,12 @@ import {
   InputGroup,
   FloatingLabel,
 } from "react-bootstrap";
-import localData from "../localData";
 import * as yup from "yup";
 import { Formik } from "formik";
 import ConfirmModal from "./common/confirmModal";
+import countryService from "../services/countryService";
+import cityService from "../services/cityService";
+import customerService from "../services/customerService";
 
 const Customer = (props) => {
   //#region Form States
@@ -23,20 +25,19 @@ const Customer = (props) => {
   const [countryData, setCountryData] = useState([]);
   const [cityData, setCityData] = useState([]);
   const [citySelectData, setCitySelectData] = useState([]);
-
   const [customerData, setCustomerData] = useState([]);
 
   const [customerFormData, setCustomerFormData] = useState({
-    CustomerCode: "",
-    EnglishName: "",
-    ArabicName: "",
-    MobileNo: "",
-    Email: "",
-    CountryCode: "",
-    City_Code: "",
-    AddressLine1: "",
-    AddressLine2: "",
-    AddressLine3: "",
+    customer_Code: "",
+    name_English: "",
+    name_Arabic: "",
+    mobile_No: "",
+    email: "",
+    country_Code: "",
+    city_Code: "",
+    address_Line1: "",
+    address_Line2: "",
+    address_Line3: "",
   });
 
   const [formAction, setFormAction] = useState("");
@@ -54,15 +55,15 @@ const Customer = (props) => {
   //#region Validation Schema
 
   const schema = yup.object().shape({
-    EnglishName: yup.string().max(50).required(),
-    ArabicName: yup.string().max(50).required(),
-    MobileNo: yup.number().required(),
-    Email: yup.string().email().max(50).required(),
-    CountryCode: yup.string().max(4).required(),
-    City_Code: yup.string().max(4).required(),
-    AddressLine1: yup.string().max(250).required(),
-    AddressLine2: yup.string().max(250).required(),
-    AddressLine3: yup.string().max(250).required(),
+    name_English: yup.string().max(50).required(),
+    name_Arabic: yup.string().max(50).required(),
+    mobile_No: yup.string().required(),
+    email: yup.string().email().max(50).required(),
+    country_Code: yup.string().max(4).required(),
+    city_Code: yup.string().max(4).required(),
+    address_Line1: yup.string().max(250).required(),
+    address_Line2: yup.string().max(250).required(),
+    address_Line3: yup.string().max(250).required(),
   });
 
   //#endregion
@@ -79,35 +80,63 @@ const Customer = (props) => {
 
   //#region Form Actions
 
+  const getAllCountries = async () => {
+    try {
+      const result = await countryService.getAllCountries();
+
+      setCountryData(result.data);
+    } catch (error) {
+      console.log(error.response);
+    }
+  };
+
+  const getAllCities = async () => {
+    try {
+      const result = await cityService.getAllCities();
+      setCityData(result.data);
+    } catch (error) {
+      console.log(error.response);
+    }
+  };
+
+  const getAllCustomers = async () => {
+    try {
+      const result = await customerService.getAllCustomer();
+      setCustomerData(result.data);
+    } catch (error) {
+      console.log(error.response);
+    }
+  };
+
   const resetForm = () => {
     let customerFormDataCopy = { ...customerFormData };
-    customerFormDataCopy.CountryCode = "";
-    customerFormDataCopy.City_Code = "";
-    customerFormDataCopy.EnglishName = "";
-    customerFormDataCopy.ArabicName = "";
-    customerFormDataCopy.AddressLine1 = "";
-    customerFormDataCopy.AddressLine2 = "";
-    customerFormDataCopy.AddressLine3 = "";
-    customerFormDataCopy.Email = "";
-    customerFormDataCopy.MobileNo = "";
+    customerFormDataCopy.country_Code = "";
+    customerFormDataCopy.city_Code = "";
+    customerFormDataCopy.name_English = "";
+    customerFormDataCopy.name_Arabic = "";
+    customerFormDataCopy.address_Line1 = "";
+    customerFormDataCopy.address_Line2 = "";
+    customerFormDataCopy.address_Line3 = "";
+    customerFormDataCopy.email = "";
+    customerFormDataCopy.mobile_No = "";
 
     setCustomerFormData(customerFormDataCopy);
 
     handleFormShow();
   };
 
-  const onEditCustomer = (customerCode) => {
+  const onEditCustomer = (customer_Code) => {
     setFormTitle("Edit Customer");
     setFormAction("Update");
 
     //Getting the selected customer
     const customer = customerData.find(
-      (x) => x.CustomerCode === parseInt(customerCode)
+      (x) => x.customer_Code === parseInt(customer_Code)
     );
 
     //getting the city from country code
     const citiesByCountry = cityData.filter(
-      (x) => x.Country.Country_Code === customer.Country.CountryCode
+      (x) => x.country.country_Code === customer.country.country_Code
     );
 
     //updating city state from dropdown
@@ -115,38 +144,106 @@ const Customer = (props) => {
 
     //Mapping form to edit customer
     const customerFormDataCopy = { ...customerFormData };
-    customerFormDataCopy.CustomerCode = customer.CustomerCode;
-    customerFormDataCopy.CountryCode = customer.Country.CountryCode;
-    customerFormDataCopy.City_Code = customer.City.City_Code;
-    customerFormDataCopy.EnglishName = customer.EnglishName;
-    customerFormDataCopy.ArabicName = customer.ArabicName;
-    customerFormDataCopy.AddressLine1 = customer.AddressLine1;
-    customerFormDataCopy.AddressLine2 = customer.AddressLine2;
-    customerFormDataCopy.AddressLine3 = customer.AddressLine3;
-    customerFormDataCopy.Email = customer.Email;
-    customerFormDataCopy.MobileNo = customer.MobileNo;
+    customerFormDataCopy.customer_Code = customer.customer_Code;
+    customerFormDataCopy.country_Code = customer.country.country_Code;
+    customerFormDataCopy.city_Code = customer.city.city_Code;
+    customerFormDataCopy.name_English = customer.name_English;
+    customerFormDataCopy.name_Arabic = customer.name_Arabic;
+    customerFormDataCopy.address_Line1 = customer.address_Line1;
+    customerFormDataCopy.address_Line2 = customer.address_Line2;
+    customerFormDataCopy.address_Line3 = customer.address_Line3;
+    customerFormDataCopy.email = customer.email;
+    customerFormDataCopy.mobile_No = customer.mobile_No;
 
     setCustomerFormData(customerFormDataCopy);
 
     handleFormShow();
   };
 
-  const onDeleteCustomer = (customerCode) => {
-    let customerDataCopy = customerData.filter(
-      (x) => x.CustomerCode !== customerCode
-    );
+  const onDeleteCustomer = async (customerCode) => {
+    await customerService.deleteCustomer(customerCode).then((result) => {
+      let customerDataCopy = customerData.filter(
+        (x) => x.customer_Code !== result.data.customer_Code
+      );
 
-    setCustomerData(customerDataCopy);
+      setCustomerData(customerDataCopy);
 
-    handleConfirmationClose();
+      handleConfirmationClose();
+    });
+  };
+
+  const createCustomer = async (values) => {
+    try {
+      let customerDataCopy = [...customerData];
+
+      let country = countryData.find(
+        (x) => x.country_Code === parseInt(values.country_Code)
+      );
+
+      let city = cityData.find(
+        (x) => x.city_Code === parseInt(values.city_Code)
+      );
+
+      let payload = {
+        customer_Code: 0,
+        name_English: values.name_English,
+        name_Arabic: values.name_Arabic,
+        mobile_No: values.mobile_No,
+        email: values.email,
+        country: {
+          country_Code: country.country_Code,
+          country_Name_English: country.country_Name_English,
+        },
+        city: {
+          city_Code: city.city_Code,
+          city_Name_English: city.city_Name_English,
+        },
+        address_Line1: values.address_Line1,
+        address_Line2: values.address_Line2,
+        address_Line3: values.address_Line3,
+      };
+
+      if (formAction === "Create") {
+        await customerService.createCustomer(payload).then((result) => {
+          payload.customer_Code = result.data.customer_Code;
+          customerDataCopy.push(payload);
+        });
+      } else if (formAction === "Update") {
+        payload.customer_Code = values.customer_Code;
+
+        await customerService.updateCustomer(payload).then((result) => {
+          let customerIndex = customerData.findIndex(
+            (x) => x.customer_Code === parseInt(result.data.customer_Code)
+          );
+
+          customerDataCopy[customerIndex].name_English = values.name_English;
+          customerDataCopy[customerIndex].name_Arabic = values.name_Arabic;
+          customerDataCopy[customerIndex].mobile_No = values.mobile_No;
+          customerDataCopy[customerIndex].email = values.email;
+          customerDataCopy[customerIndex].Country = country;
+          customerDataCopy[customerIndex].City = city;
+          customerDataCopy[customerIndex].address_Line1 = values.address_Line1;
+          customerDataCopy[customerIndex].address_Line2 = values.address_Line2;
+          customerDataCopy[customerIndex].address_Line3 = values.address_Line3;
+        });
+      }
+
+      setCustomerData(customerDataCopy);
+
+      handleFormClose();
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   //#endregion
 
   useEffect(() => {
-    setCountryData(localData.countries());
-    setCityData(localData.cities());
-    setCustomerData(localData.customers());
+    getAllCustomers().then(() => {
+      getAllCountries().then(() => {
+        getAllCities();
+      });
+    });
   }, []);
 
   return (
@@ -173,32 +270,31 @@ const Customer = (props) => {
               <th>Code</th>
               <th>Name English</th>
               <th>Name Arabic</th>
-              <th>Email</th>
+              <th>email</th>
               <th>Mobile</th>
               <th>Country</th>
               <th>City</th>
-              <th>AddressLine1</th>
-
+              <th>Address Line1</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             {customerData.map((customer) => (
-              <tr key={customer.CustomerCode}>
-                <td>{customer.CustomerCode}</td>
-                <td>{customer.EnglishName}</td>
-                <td>{customer.ArabicName}</td>
-                <td>{customer.Email}</td>
-                <td>{customer.MobileNo}</td>
-                <td>{customer.Country.CountryName}</td>
-                <td>{customer.City.City_Name_English}</td>
-                <td>{customer.AddressLine1}</td>
+              <tr key={customer.customer_Code}>
+                <td>{customer.customer_Code}</td>
+                <td>{customer.name_English}</td>
+                <td>{customer.name_Arabic}</td>
+                <td>{customer.email}</td>
+                <td>{customer.mobile_No}</td>
+                <td>{customer.country.country_Name_English}</td>
+                <td>{customer.city.city_Name_English}</td>
+                <td>{customer.address_Line1}</td>
 
                 <td>
                   <button
                     type="button"
                     onClick={() => {
-                      onEditCustomer(customer.CustomerCode);
+                      onEditCustomer(customer.customer_Code);
                     }}
                     className="btn btn-secondary m-2"
                   >
@@ -208,7 +304,7 @@ const Customer = (props) => {
                   <button
                     type="button"
                     onClick={() => {
-                      setConfirmationKeyValue(customer.CustomerCode);
+                      setConfirmationKeyValue(customer.customer_Code);
                       handleConfirmationShow();
                     }}
                     className="btn btn-danger"
@@ -232,64 +328,12 @@ const Customer = (props) => {
             <Formik
               validationSchema={schema}
               onSubmit={(values, actions) => {
-                let customerDataCopy = [...customerData];
-
-                let country = countryData.find(
-                  (x) => x.CountryCode === parseInt(values.CountryCode)
-                );
-
-                let city = cityData.find(
-                  (x) => x.City_Code === parseInt(values.City_Code)
-                );
-
-                if (formAction === "Create") {
-                  customerDataCopy.push({
-                    CustomerCode: 10,
-                    EnglishName: values.EnglishName,
-                    ArabicName: values.ArabicName,
-                    MobileNo: values.MobileNo,
-                    Email: values.Email,
-                    Country: {
-                      CountryCode: country.CountryCode,
-                      CountryName: country.CountryName,
-                    },
-                    City: {
-                      City_Code: city.City_Code,
-                      City_Name_English: city.City_Name_English,
-                    },
-                    AddressLine1: values.AddressLine1,
-                    AddressLine2: values.AddressLine2,
-                    AddressLine3: values.AddressLine3,
-                  });
-                } else if (formAction === "Update") {
-                  let customerIndex = customerData.findIndex(
-                    (x) => x.CustomerCode === parseInt(values.CustomerCode)
-                  );
-
-                  customerDataCopy[customerIndex].EnglishName =
-                    values.EnglishName;
-                  customerDataCopy[customerIndex].ArabicName =
-                    values.ArabicName;
-                  customerDataCopy[customerIndex].MobileNo = values.MobileNo;
-                  customerDataCopy[customerIndex].Email = values.Email;
-                  customerDataCopy[customerIndex].Country = country;
-                  customerDataCopy[customerIndex].City = city;
-                  customerDataCopy[customerIndex].AddressLine1 =
-                    values.AddressLine1;
-                  customerDataCopy[customerIndex].AddressLine2 =
-                    values.AddressLine2;
-                  customerDataCopy[customerIndex].AddressLine3 =
-                    values.AddressLine3;
-                }
-
-                setCustomerData(customerDataCopy);
-
-                handleFormClose();
+                createCustomer(values);
               }}
               onReset={(values) => {
                 //getting the city from country code
                 const citiesByCountry = cityData.filter(
-                  (x) => x.Country.Country_Code === values.CountryCode
+                  (x) => x.country.country_Code === values.country_Code
                 );
 
                 //updating city state from dropdown
@@ -311,7 +355,7 @@ const Customer = (props) => {
                   <Form.Group
                     as={Row}
                     className="mb-3"
-                    controlId="formHorizontalEmail"
+                    controlId="formHorizontalemail"
                   >
                     <Form.Label column sm={2}>
                       Country
@@ -324,22 +368,22 @@ const Customer = (props) => {
                           handleChange(e);
 
                           const citiesByCountry = cityData.filter(
-                            (x) => x.Country.Country_Code === parseInt(value)
+                            (x) => x.country.country_Code === parseInt(value)
                           );
                           // console.log(citiesByCountry)
                           setCitySelectData(citiesByCountry);
                         }}
-                        name="CountryCode"
-                        value={values.CountryCode}
-                        isValid={touched.CountryCode && !errors.CountryCode}
+                        name="country_Code"
+                        value={values.country_Code}
+                        isValid={touched.country_Code && !errors.country_Code}
                       >
                         <option value="">Select</option>
                         {countryData.map((country) => (
                           <option
-                            key={country.CountryCode}
-                            value={country.CountryCode}
+                            key={country.country_Code}
+                            value={country.country_Code}
                           >
-                            {country.CountryName}
+                            {country.country_Name_English}
                           </option>
                         ))}
                       </Form.Select>
@@ -349,7 +393,7 @@ const Customer = (props) => {
                   <Form.Group
                     as={Row}
                     className="mb-3"
-                    controlId="formHorizontalEmail"
+                    controlId="formHorizontalemail"
                   >
                     <Form.Label column sm={2}>
                       City
@@ -357,14 +401,14 @@ const Customer = (props) => {
                     <Col sm={10}>
                       <Form.Select
                         onChange={handleChange}
-                        name="City_Code"
-                        value={values.City_Code}
-                        isValid={touched.City_Code && !errors.City_Code}
+                        name="city_Code"
+                        value={values.city_Code}
+                        isValid={touched.city_Code && !errors.city_Code}
                       >
                         <option value="">Select</option>
                         {citySelectData.map((city) => (
-                          <option key={city.City_Code} value={city.City_Code}>
-                            {city.City_Name_English}
+                          <option key={city.city_Code} value={city.city_Code}>
+                            {city.city_Name_English}
                           </option>
                         ))}
                       </Form.Select>
@@ -373,19 +417,19 @@ const Customer = (props) => {
                   <Form.Group
                     as={Row}
                     className="mb-3"
-                    controlId="formHorizontalEmail"
+                    controlId="formHorizontalemail"
                   >
                     <Form.Label column sm={2}>
                       Name English
                     </Form.Label>
                     <Col sm={10}>
                       <Form.Control
-                        name="EnglishName"
+                        name="name_English"
                         type="text"
-                        value={values.EnglishName}
+                        value={values.name_English}
                         onChange={handleChange}
-                        isValid={touched.EnglishName && !errors.EnglishName}
-                        isInvalid={!!errors.EnglishName}
+                        isValid={touched.name_English && !errors.name_English}
+                        isInvalid={!!errors.name_English}
                       />
                     </Col>
                   </Form.Group>
@@ -400,12 +444,12 @@ const Customer = (props) => {
                     </Form.Label>
                     <Col sm={10}>
                       <Form.Control
-                        name="ArabicName"
+                        name="name_Arabic"
                         type="text"
-                        value={values.ArabicName}
+                        value={values.name_Arabic}
                         onChange={handleChange}
-                        isValid={touched.ArabicName && !errors.ArabicName}
-                        isInvalid={!!errors.ArabicName}
+                        isValid={touched.name_Arabic && !errors.name_Arabic}
+                        isInvalid={!!errors.name_Arabic}
                       />
                     </Col>
                   </Form.Group>
@@ -420,12 +464,12 @@ const Customer = (props) => {
                     </Form.Label>
                     <Col sm={10}>
                       <Form.Control
-                        name="Email"
+                        name="email"
                         type="text"
-                        value={values.Email}
+                        value={values.email}
                         onChange={handleChange}
-                        isValid={touched.Email && !errors.Email}
-                        isInvalid={!!errors.Email}
+                        isValid={touched.email && !errors.email}
+                        isInvalid={!!errors.email}
                       />
                     </Col>
                   </Form.Group>
@@ -440,12 +484,12 @@ const Customer = (props) => {
                     </Form.Label>
                     <Col sm={10}>
                       <Form.Control
-                        name="MobileNo"
-                        type="number"
-                        value={values.MobileNo}
+                        name="mobile_No"
+                        type="text"
+                        value={values.mobile_No}
                         onChange={handleChange}
-                        isValid={touched.MobileNo && !errors.MobileNo}
-                        isInvalid={!!errors.MobileNo}
+                        isValid={touched.mobile_No && !errors.mobile_No}
+                        isInvalid={!!errors.mobile_No}
                       />
                     </Col>
                   </Form.Group>
@@ -458,15 +502,17 @@ const Customer = (props) => {
                       AddressLine1
                     </Form.Label>
                     <Col sm={10}>
-                      <FloatingLabel controlId="AddressLine1">
+                      <FloatingLabel controlId="address_Line1">
                         <Form.Control
                           as="textarea"
-                          name="AddressLine1"
+                          name="address_Line1"
                           onChange={handleChange}
                           style={{ height: "60px" }}
-                          isValid={touched.AddressLine1 && !errors.AddressLine1}
-                          isInvalid={!!errors.AddressLine1}
-                          value={values.AddressLine1}
+                          isValid={
+                            touched.address_Line1 && !errors.address_Line1
+                          }
+                          isInvalid={!!errors.address_Line1}
+                          value={values.address_Line1}
                         />
                       </FloatingLabel>
                     </Col>
@@ -478,18 +524,20 @@ const Customer = (props) => {
                     controlId="formHorizontalPassword"
                   >
                     <Form.Label column sm={2}>
-                      AddressLine2
+                      AddressLine 2
                     </Form.Label>
                     <Col sm={10}>
-                      <FloatingLabel controlId="AddressLine2">
+                      <FloatingLabel controlId="address_Line2">
                         <Form.Control
                           as="textarea"
-                          name="AddressLine2"
+                          name="address_Line2"
                           onChange={handleChange}
                           style={{ height: "60px" }}
-                          isValid={touched.AddressLine2 && !errors.AddressLine2}
-                          isInvalid={!!errors.AddressLine2}
-                          value={values.AddressLine2}
+                          isValid={
+                            touched.address_Line2 && !errors.address_Line2
+                          }
+                          isInvalid={!!errors.address_Line2}
+                          value={values.address_Line2}
                         />
                       </FloatingLabel>
                     </Col>
@@ -501,18 +549,20 @@ const Customer = (props) => {
                     controlId="formHorizontalPassword"
                   >
                     <Form.Label column sm={2}>
-                      AddressLine3
+                      Address Line3
                     </Form.Label>
                     <Col sm={10}>
-                      <FloatingLabel controlId="AddressLine3">
+                      <FloatingLabel controlId="address_Line3">
                         <Form.Control
                           as="textarea"
-                          name="AddressLine3"
+                          name="address_Line3"
                           onChange={handleChange}
                           style={{ height: "60px" }}
-                          isValid={touched.AddressLine3 && !errors.AddressLine3}
-                          isInvalid={!!errors.AddressLine3}
-                          value={values.AddressLine3}
+                          isValid={
+                            touched.address_Line3 && !errors.address_Line3
+                          }
+                          isInvalid={!!errors.address_Line3}
+                          value={values.address_Line3}
                         />
                       </FloatingLabel>
                     </Col>

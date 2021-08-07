@@ -130,17 +130,21 @@ const Cities = (props) => {
           cityDataCopy.push(payload);
         });
       } else if (formAction === "Update") {
-        let cityIndex = cityData.findIndex(
-          (x) => x.city_Code === values.city_Code
-        );
-        cityDataCopy[cityIndex].city_Code = values.city_Code;
-        cityDataCopy[cityIndex].city_Name_English = values.city_Name_English;
-        cityDataCopy[cityIndex].city_Name_Arabic = values.city_Name_Arabic;
-        cityDataCopy[cityIndex].country.country_Code = values.country_Code;
-        cityDataCopy[cityIndex].country.country_Name_English =
-          country.country_Name_English;
-        cityDataCopy[cityIndex].country.country_Name_Arabic =
-          country.country_Name_Arabic;
+        payload.city_Code = values.city_Code;
+
+        await cityService.updateCity(payload).then((result) => {
+          let cityIndex = cityData.findIndex(
+            (x) => x.city_Code === result.data.city_Code
+          );
+          cityDataCopy[cityIndex].city_Code = values.city_Code;
+          cityDataCopy[cityIndex].city_Name_English = values.city_Name_English;
+          cityDataCopy[cityIndex].city_Name_Arabic = values.city_Name_Arabic;
+          cityDataCopy[cityIndex].country.country_Code = values.country_Code;
+          cityDataCopy[cityIndex].country.country_Name_English =
+            country.country_Name_English;
+          cityDataCopy[cityIndex].country.country_Name_Arabic =
+            country.country_Name_Arabic;
+        });
       }
 
       setCityData(cityDataCopy);
